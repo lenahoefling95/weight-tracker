@@ -16,13 +16,8 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  #loadingBar {
-    display: none; position: fixed; top: 0; left: 0; right: 0;
-    height: 3px; background: var(--actual);
-    animation: loadpulse 1s ease-in-out infinite alternate;
-    z-index: 9999;
-  }
-  @keyframes loadpulse { from { opacity: 0.4; } to { opacity: 1; } }
+  #loadingBar { display:none; position:fixed; top:0; left:0; right:0; height:3px; background:var(--actual); z-index:9999; animation:loadpulse 1s ease-in-out infinite alternate; }
+  @keyframes loadpulse { from{opacity:0.4} to{opacity:1} }
 
   body {
     background: var(--bg); font-family: 'DM Sans', sans-serif;
@@ -153,30 +148,20 @@
 </head>
 <body>
 <div id="loadingBar"></div>
-
-<!-- Setup Screen -->
-<div id="setupScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+<div id="setupScreen" style="display:flex;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
   <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%">
     <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.5rem">Gewichts-Tracker</h1>
-    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Trag einmalig deine Supabase-Zugangsdaten ein – sie werden im Browser gespeichert.</p>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Trag deine Supabase-Zugangsdaten ein.</p>
     <div style="display:flex;flex-direction:column;gap:0.75rem">
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Supabase URL</label>
-        <input id="setupUrl" type="text" placeholder="https://xxx.supabase.co" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
-      </div>
-      <div>
-        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Anon Public Key</label>
-        <input id="setupKey" type="password" placeholder="eyJ..." style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
-      </div>
+      <div><label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Supabase URL</label>
+        <input id="setupUrl" type="text" placeholder="https://xxx.supabase.co" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none"></div>
+      <div><label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Anon Public Key</label>
+        <input id="setupKey" type="password" placeholder="eyJ..." style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none"></div>
       <button onclick="initSupabase()" style="background:var(--actual);color:#fff;border:none;border-radius:8px;padding:0.65rem;font-size:0.9rem;font-family:inherit;font-weight:500;cursor:pointer;margin-top:0.25rem">Verbinden</button>
     </div>
-    <p style="font-size:0.72rem;color:var(--muted);margin-top:1rem;text-align:center">Daten werden nur in deinem Browser gespeichert, nie weitergegeben.</p>
   </div>
 </div>
-
-<!-- Main App -->
-<div id="mainApp" style="display:none">
-<div class="app">
+<div id="mainApp" style="display:none"><div class="app">
 
   <header>
     <h1>Gewichts-Tracker</h1>
@@ -315,43 +300,25 @@
 </div>
 
 <script>
-// ── Supabase ──────────────────────────────────────────────────────────────────
-// Load credentials from localStorage
-let SUPABASE_URL = localStorage.getItem('sb_url') || '';
-let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
+// ── Supabase ─────────────────────────────────────────────────────────────────
 let sb = null;
 
 function initSupabase() {
-  const url = document.getElementById('setupUrl')?.value.trim();
-  const key = document.getElementById('setupKey')?.value.trim();
+  const url = document.getElementById('setupUrl').value.trim();
+  const key = document.getElementById('setupKey').value.trim();
   if (!url || !key) return;
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  SUPABASE_URL = url;
-  SUPABASE_KEY = key;
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sb = supabase.createClient(url, key);
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
   loadAll();
 }
 
-function checkSetup() {
-  if (SUPABASE_URL && SUPABASE_KEY) {
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    document.getElementById('setupScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-  } else {
-    document.getElementById('setupScreen').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
-  }
+function showLoading(on) {
+  document.getElementById('loadingBar').style.display = on ? 'block' : 'none';
 }
 
-let entries = [];
-let events = [];
-let cycles = [];
-// No seed data in empty version
-
 async function loadAll() {
+  if (!sb) return;
   showLoading(true);
   try {
     const [eRes, evRes, cRes] = await Promise.all([
@@ -359,44 +326,421 @@ async function loadAll() {
       sb.from('events').select('*').order('date', {ascending:true}),
       sb.from('cycles').select('*').order('start_date', {ascending:true})
     ]);
-
     entries = (eRes.data||[]).map(r => ({date:r.date, kg:parseFloat(r.kg)}));
     events  = (evRes.data||[]).map(r => ({date:r.date, name:r.name, id:r.id}));
     cycles  = (cRes.data||[]).map(r => ({start:r.start_date, name:r.name, id:r.id}));
     render();
-  } catch(e) { console.error('Load error:', e); }
+  } catch(e) { console.error(e); }
   showLoading(false);
 }
 
-function showLoading(on) {
-  const el = document.getElementById('loadingBar');
-  if (el) el.style.display = on ? 'block' : 'none';
+async function dbAddEntry(date, kg) { await sb.from('weight_entries').upsert({date, kg}, {onConflict:'date'}); await loadAll(); }
+async function dbRemoveEntry(date) { await sb.from('weight_entries').delete().eq('date', date); await loadAll(); }
+async function dbAddEvent(date, name) { await sb.from('events').insert({date, name}); await loadAll(); }
+async function dbRemoveEvent(id) { await sb.from('events').delete().eq('id', id); await loadAll(); }
+async function dbAddCycle(start_date, name) { await sb.from('cycles').insert({start_date, name}); await loadAll(); }
+async function dbRemoveCycle(id) { await sb.from('cycles').delete().eq('id', id); await loadAll(); }
+
+let entries = [];
+
+let events = [];
+
+function parseDate(str) {
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function formatDate(str) {
+  return parseDate(str).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+}
+function daysBetween(a, b) {
+  return Math.round((parseDate(b) - parseDate(a)) / 86400000);
+}
+function addMonths(dateObj, months) {
+  const d = new Date(dateObj);
+  d.setDate(d.getDate() + Math.round(months * 30));
+  return d;
+}
+function sorted() { return [...entries].sort((a,b) => a.date.localeCompare(b.date)); }
+function sortedEvents() { return [...events].sort((a,b) => a.date.localeCompare(b.date)); }
+
+function calcRate() {
+  const s = sorted();
+  if (s.length < 2) return 0;
+  const days = daysBetween(s[0].date, s[s.length-1].date);
+  return days > 0 ? (s[0].kg - s[s.length-1].kg) / days * 30 : 0;
 }
 
-async function dbAddEntry(date, kg) {
-  await sb.from('weight_entries').upsert({date, kg}, {onConflict:'date'});
-  await loadAll();
+function projectedKg(fromKg, fromDate, targetDate, ratePerMonth) {
+  const days = (parseDate(targetDate) - parseDate(fromDate)) / 86400000;
+  if (days <= 0) return fromKg;
+  const g2 = parseFloat(document.getElementById("goal2Input").value) || 69;
+  const floor = Math.min(parseFloat(document.getElementById("goal1Input").value)||75, g2);
+  return Math.max(fromKg - (days / 30) * ratePerMonth, floor);
 }
-async function dbRemoveEntry(date) {
-  await sb.from('weight_entries').delete().eq('date', date);
-  await loadAll();
+
+// Tabs
+let activeTab = "weight";
+function switchTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (el) el.classList.add('active');
+  render();
 }
-async function dbAddEvent(date, name) {
-  await sb.from('events').insert({date, name});
-  await loadAll();
+
+// Add weight
+function addEntry() {
+  const date = document.getElementById('inputDate').value;
+  const kg = parseFloat(document.getElementById('inputWeight').value);
+  if (!date || isNaN(kg)) return;
+  document.getElementById('inputWeight').value = '';
+  dbAddEntry(date, kg);
 }
-async function dbRemoveEvent(id) {
-  await sb.from('events').delete().eq('id', id);
-  await loadAll();
+
+function removeEntry(date) {
+  dbRemoveEntry(date);
 }
-async function dbAddCycle(start_date, name) {
-  await sb.from('cycles').insert({start_date, name});
-  await loadAll();
+
+// Add event
+function addEvent() {
+  const date = document.getElementById('eventDate').value;
+  const name = document.getElementById('eventName').value.trim();
+  if (!date || !name) return;
+  document.getElementById('eventName').value = '';
+  dbAddEvent(date, name);
 }
-async function dbRemoveCycle(id) {
-  await sb.from('cycles').delete().eq('id', id);
-  await loadAll();
+
+function removeEvent(date, name) {
+  events = events.filter(e => !(e.date === date && e.name === name));
+  render();
 }
+
+// Stats
+function updateStats() {
+  const s = sorted();
+  if (!s.length) return;
+  const first = s[0], last = s[s.length-1];
+  document.getElementById('statCurrent').textContent = last.kg.toFixed(2) + ' kg';
+  document.getElementById('statCurrentDate').textContent = formatDate(last.date);
+  const diff = first.kg - last.kg;
+  document.getElementById('statTotal').textContent = (diff >= 0 ? '-' : '+') + Math.abs(diff).toFixed(2) + ' kg';
+  const days = daysBetween(first.date, last.date);
+  document.getElementById('statTotalDays').textContent = `in ${days} Tagen`;
+  const rate = calcRate();
+  document.getElementById('statRate').textContent = (rate >= 0 ? '-' : '+') + Math.abs(rate).toFixed(2) + ' kg';
+}
+
+// Weight table
+function updateTable() {
+  const s = sorted();
+  const tbody = document.getElementById('dataBody');
+  if (!s.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Noch keine Einträge</td></tr>'; return; }
+  const sDesc = [...s].reverse();
+  tbody.innerHTML = sDesc.map((e, i) => {
+    const idx = s.indexOf(e);
+    const prev = idx > 0 ? s[idx-1] : null;
+    const diff = prev ? (e.kg - prev.kg) : null;
+    let diffHtml = '';
+    if (diff !== null) {
+      const cls = diff > 0 ? 'diff-pos' : diff < 0 ? 'diff-neg' : '';
+      const sign = diff > 0 ? '+' : '';
+      diffHtml = `<span class="${cls}">${sign}${diff.toFixed(2)}</span>`;
+    }
+    const isStart = e.date === '2026-04-20';
+    return `<tr>
+      <td>${formatDate(e.date)}</td>
+      <td class="kg">${e.kg.toFixed(2)} kg</td>
+      <td>${diffHtml}</td>
+      <td>${isStart ? '' : `<button class="btn-sm" onclick="removeEntry('${e.date}')">✕</button>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Event table
+function updateEventTable() {
+  const s = sorted();
+  const last = s[s.length-1];
+  const rate = calcRate();
+  const tbody = document.getElementById('eventBody');
+  const evs = sortedEvents();
+  if (!evs.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Noch keine Events eingetragen</td></tr>'; return; }
+  const today = new Date().toISOString().slice(0,10);
+  tbody.innerHTML = evs.map(ev => {
+    // Konservative Prognose: immer vom Startpunkt (20.04) mit fixer Rate 1,5kg/Mo → ändert sich nie
+    const startEntry = sorted()[0];
+    const daysSinceStart = (parseDate(ev.date) - parseDate(startEntry.date)) / 86400000;
+    const g1val = parseFloat(document.getElementById("goal1Input").value) || 75;
+    const g2val = parseFloat(document.getElementById("goal2Input").value) || 69;
+    const floor = Math.min(g1val, g2val);
+    const proKgRaw = startEntry.kg - (daysSinceStart / 30) * getConservativeRate();
+    const proStr = Math.max(proKgRaw, floor).toFixed(1) + ' kg';
+    // Trend-Prognose: vom aktuellen Gewicht aus, darf sich ändern
+    const trendKgRaw = rate > 0 ? projectedKg(last.kg, last.date, ev.date, rate) : null;
+    const trendStr = trendKgRaw !== null ? trendKgRaw.toFixed(1) + ' kg' : '–';
+    const eventPassed = ev.date <= today;
+    // Letzter Eintrag am oder vor dem Event-Datum
+    const sortedAll = [...entries].sort((a,b) => a.date.localeCompare(b.date));
+    const closestEntry = sortedAll.filter(e => e.date <= ev.date).pop();
+    let cols = '';
+    if (eventPassed && closestEntry) {
+      cols = `<td style="color:var(--actual);font-weight:500">${closestEntry.kg.toFixed(2)} kg</td><td style="color:var(--trend)">${trendStr}</td><td style="color:var(--prognose)">${proStr}</td>`;
+    } else if (eventPassed) {
+      cols = `<td style="color:var(--muted)">kein Eintrag</td><td style="color:var(--trend)">${trendStr}</td><td style="color:var(--prognose)">${proStr}</td>`;
+    } else {
+      cols = `<td style="color:var(--muted)">–</td><td style="color:var(--trend)">${trendStr}</td><td style="color:var(--prognose)">${proStr}</td>`;
+    }
+    return `<tr>
+      <td>${formatDate(ev.date)}</td>
+      <td><span class="event-dot"></span>${ev.name}</td>
+      ${cols}
+      <td><button class="btn-sm" onclick="removeEvent('${ev.date}', '${ev.name.replace(/'/g,"\'")}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Goal badges
+function updateGoalBadges() {
+  const s = sorted();
+  if (s.length < 2) { document.getElementById('goalBadges').innerHTML = '<div class="empty-state">Mindestens 2 Einträge nötig für Prognose</div>'; return; }
+  const last = s[s.length-1];
+  const rate = calcRate();
+  const g1 = parseFloat(document.getElementById('goal1Input').value);
+  const g2 = parseFloat(document.getElementById('goal2Input').value);
+
+  function arrivalStr(kg, target, rateKgMo, fromDate) {
+    if (kg <= target) return 'bereits erreicht ✓';
+    if (rateKgMo <= 0) return 'kein Trend';
+    const months = (kg - target) / rateKgMo;
+    return addMonths(parseDate(fromDate), months).toLocaleDateString('de-DE', { month:'long', year:'numeric' });
+  }
+
+  let html = '';
+  [g1, g2].forEach(g => {
+    html += `
+      <div class="goal-badge">
+        <div class="goal-dot" style="background:var(--trend)"></div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:2px">Ziel ${g} kg · aktuelles Tempo (${rate.toFixed(1)} kg/Mo)</div>
+          <div>${arrivalStr(last.kg, g, rate, last.date)}</div>
+        </div>
+      </div>
+      <div class="goal-badge">
+        <div class="goal-dot" style="background:var(--prognose)"></div>
+        <div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:2px">Ziel ${g} kg · konservative Prognose (konservativ)</div>
+          <div>${arrivalStr(last.kg, g, 1.8, last.date)}</div>
+        </div>
+      </div>`;
+  });
+
+
+  document.getElementById('goalBadges').innerHTML = html;
+}
+
+// Chart
+function drawChart() {
+  const canvas = document.getElementById('chart');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = 300;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const s = sorted();
+  if (s.length < 1) return;
+
+  const g1 = parseFloat(document.getElementById('goal1Input').value) || 75;
+  const g2 = parseFloat(document.getElementById('goal2Input').value) || 69;
+  const last = s[s.length-1], first = s[0];
+  const rate = calcRate();
+  const minGoal = Math.min(g1, g2);
+
+  const firstDate = parseDate(first.date);
+  const lastDate = parseDate(last.date);
+
+  function endDate(kg, target, ratePerMonth) {
+    if (kg <= target || ratePerMonth <= 0) return lastDate;
+    const months = (kg - target) / ratePerMonth;
+    return addMonths(lastDate, months);
+  }
+
+  const evDates = sortedEvents().map(e => parseDate(e.date));
+  const trendEnd = rate > 0 ? endDate(last.kg, minGoal, rate) : lastDate;
+  const proEnd = endDate(last.kg, minGoal, 1.8);
+  const maxDate = new Date(Math.max(trendEnd, proEnd, lastDate, ...evDates));
+  maxDate.setDate(maxDate.getDate() + 20);
+
+  const totalDays = (maxDate - firstDate) / 86400000;
+  const allKg = s.map(e => e.kg);
+  const maxKg = Math.max(...allKg) + 1;
+  const minKg = Math.min(...allKg, g2, g1) - 1;
+  const kgRange = maxKg - minKg;
+
+  const ml = 52, mr = 16, mt = 20, mb = 40;
+  const cW = W - ml - mr, cH = H - mt - mb;
+
+  function xOf(d) { return ml + ((d - firstDate) / 86400000 / totalDays) * cW; }
+  function xOfStr(str) { return xOf(parseDate(str)); }
+  function yOf(kg) { return mt + (1 - (kg - minKg) / kgRange) * cH; }
+
+  ctx.fillStyle = '#242018'; ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  for (let k = Math.ceil(minKg); k <= Math.floor(maxKg); k++) {
+    if (k % 2 !== 0 && kgRange > 10) continue;
+    ctx.strokeStyle = '#3a342c'; ctx.lineWidth = 1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(ml, yOf(k)); ctx.lineTo(ml+cW, yOf(k)); ctx.stroke();
+    ctx.fillStyle = '#8a7a6a'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(k, ml-6, yOf(k)+4);
+  }
+
+  // Goal lines
+  [g1, g2].forEach((g, i) => {
+    if (g < minKg || g > maxKg) return;
+    ctx.save(); ctx.strokeStyle = i===0 ? '#5ab5a0' : '#4a8fa0';
+    ctx.lineWidth = 1; ctx.setLineDash([4,4]); ctx.globalAlpha = 0.45;
+    ctx.beginPath(); ctx.moveTo(ml, yOf(g)); ctx.lineTo(ml+cW, yOf(g)); ctx.stroke();
+    ctx.restore();
+  });
+
+  // Axes
+  ctx.strokeStyle = '#3a342c'; ctx.lineWidth = 1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(ml,mt); ctx.lineTo(ml,mt+cH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ml,mt+cH); ctx.lineTo(ml+cW,mt+cH); ctx.stroke();
+
+  // X month labels
+  ctx.fillStyle = '#8a7a6a'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+  const mnames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  let md = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  while (md <= maxDate) {
+    md.setMonth(md.getMonth()+1);
+    const x = xOf(md);
+    if (x > ml+10 && x < ml+cW-10) ctx.fillText(mnames[md.getMonth()]+' '+String(md.getFullYear()).slice(2), x, H-mb+14);
+  }
+
+  function dashedLine(pts, color, dash) {
+    if (pts.length < 2) return;
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.setLineDash(dash||[8,5]); ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath(); pts.forEach((p,i) => i===0 ? ctx.moveTo(p[0],p[1]) : ctx.lineTo(p[0],p[1]));
+    ctx.stroke(); ctx.restore();
+  }
+
+  function fillUnder(pts, color) {
+    if (pts.length < 2) return;
+    const base = yOf(minKg);
+    ctx.save(); ctx.globalAlpha = 0.12; ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], base);
+    pts.forEach(p => ctx.lineTo(p[0],p[1]));
+    ctx.lineTo(pts[pts.length-1][0], base); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  function buildPrognose(fromKg, fromD, target, ratePerMonth) {
+    const pts = [[xOf(fromD), yOf(fromKg)]];
+    if (ratePerMonth <= 0 || fromKg <= target) return pts;
+    const months = (fromKg - target) / ratePerMonth;
+    const end = addMonths(fromD, months);
+    pts.push([xOf(end), yOf(target)]);
+    return pts;
+  }
+
+  const actualPts = s.map(e => [xOfStr(e.date), yOf(e.kg)]);
+  const prognosePts = buildPrognose(last.kg, lastDate, minGoal, 1.8);
+  const trendPts = rate > 0 ? buildPrognose(last.kg, lastDate, minGoal, rate) : [];
+
+  fillUnder(prognosePts, '#5ab5a0');
+  fillUnder(trendPts, '#e05a8a');
+  // actual fill
+  const baseY = yOf(minKg);
+  if (actualPts.length >= 2) {
+    ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#e8835a';
+    ctx.beginPath(); ctx.moveTo(actualPts[0][0], baseY);
+    actualPts.forEach(p => ctx.lineTo(p[0],p[1]));
+    ctx.lineTo(actualPts[actualPts.length-1][0], baseY);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  dashedLine(prognosePts, '#5ab5a0');
+  dashedLine(trendPts, '#e05a8a');
+
+  // Actual line
+  if (actualPts.length >= 2) {
+    ctx.save(); ctx.strokeStyle = '#e8835a'; ctx.lineWidth = 2.5;
+    ctx.setLineDash([]); ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath(); actualPts.forEach((p,i) => i===0 ? ctx.moveTo(p[0],p[1]) : ctx.lineTo(p[0],p[1]));
+    ctx.stroke(); ctx.restore();
+  }
+
+  // Actual dots (small)
+  s.forEach((e,i) => {
+    const [x,y] = actualPts[i];
+    ctx.save();
+    ctx.fillStyle = i===s.length-1 ? '#e8835a' : '#242018';
+    ctx.strokeStyle = '#e8835a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
+    if (i===0 || i===s.length-1) {
+      ctx.fillStyle = '#e8835a'; ctx.font = 'bold 10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(e.kg.toFixed(2)+' kg', x, y-9);
+    }
+  });
+
+  // Prognose end dots
+  function endDot(pts, color, label) {
+    if (pts.length < 2) return;
+    const [x,y] = pts[pts.length-1];
+    ctx.save(); ctx.fillStyle='#242018'; ctx.strokeStyle=color; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=color; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label, x, y-9); ctx.restore();
+  }
+  endDot(trendPts, '#e05a8a', minGoal+' kg');
+  endDot(prognosePts, '#5ab5a0', minGoal+' kg');
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  if (activeTab === 'event') sortedEvents().forEach((ev, idx) => {
+    const evD = parseDate(ev.date);
+    const x = xOf(evD);
+    if (x < ml || x > ml+cW) return;
+
+    // Vertical line
+    ctx.save(); ctx.strokeStyle = '#f0c060'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,3]); ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, mt+cH); ctx.stroke(); ctx.restore();
+
+    // Dot on trend line
+    const trendKg = rate > 0 ? projectedKg(last.kg, last.date, ev.date, rate) : null;
+    const proKg = projectedKg(last.kg, last.date, ev.date, 1.8);
+
+    if (trendKg !== null && trendKg >= minKg && trendKg <= maxKg) {
+      ctx.save(); ctx.fillStyle='#242018'; ctx.strokeStyle='#e05a8a'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x, yOf(trendKg), 4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    if (proKg >= minKg && proKg <= maxKg) {
+      ctx.save(); ctx.fillStyle='#242018'; ctx.strokeStyle='#5ab5a0'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x, yOf(proKg), 4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+
+    // Label (alternating above/below to avoid overlap)
+    const labelY = idx % 2 === 0 ? mt + 12 : mt + 24;
+    ctx.save(); ctx.fillStyle = '#f0c060'; ctx.font = 'bold 9px DM Sans,sans-serif';
+    ctx.textAlign = 'center'; ctx.globalAlpha = 0.9;
+    // Truncate long names
+    const label = ev.name.length > 14 ? ev.name.slice(0,13)+'…' : ev.name;
+    ctx.fillText(label, x, labelY); ctx.restore();
+  });
+
+  // Heute marker
+  ctx.save(); ctx.strokeStyle='#e8835a'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.globalAlpha=0.3;
+  ctx.beginPath(); ctx.moveTo(xOf(lastDate),mt); ctx.lineTo(xOf(lastDate),mt+cH); ctx.stroke(); ctx.restore();
+  ctx.fillStyle='#e8835a'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.globalAlpha=0.7;
+  ctx.fillText('Heute', xOf(lastDate), H-mb+26); ctx.globalAlpha=1;
+}
+
+// ── Cycle Data ───────────────────────────────────────────────────────────────
+let cycles = [];
 
 function addCycle() {
   const start = document.getElementById('cycleStartDate').value;
@@ -407,9 +751,7 @@ function addCycle() {
   dbAddCycle(start, name);
 }
 
-function removeCycle(id) {
-  dbRemoveCycle(id);
-}
+function removeCycle(id) { dbRemoveCycle(id); }
 
 function cycleWeekAvg(cycleStart, weekNum) {
   // weekNum: 1-4, each 7 days
@@ -511,8 +853,7 @@ function render() {
 document.getElementById('inputDate').value = new Date().toISOString().slice(0,10);
 document.getElementById('eventDate').value = new Date().toISOString().slice(0,10);
 window.addEventListener('resize', render);
-checkSetup();
 </script>
-</div>
+</div></div>
 </body>
 </html>
