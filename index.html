@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gewichts-Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #1a1612; --card: #242018; --card2: #2c2820; --border: #3a342c;
+    --actual: #e8835a; --trend: #e05a8a; --prognose: #5ab5a0;
+    --goal1: #5ab5a0; --goal2: #4a8fa0; --event: #f0c060;
+    --text: #f0ead8; --muted: #8a7a6a; --input-bg: #1a1612; --danger: #e05a5a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  #loadingBar {
+    display: none; position: fixed; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--actual);
+    animation: loadpulse 1s ease-in-out infinite alternate;
+    z-index: 9999;
+  }
+  @keyframes loadpulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+  body {
+    background: var(--bg); font-family: 'DM Sans', sans-serif;
+    color: var(--text); min-height: 100vh; padding: 1.5rem 1rem;
+  }
+
+  .app { max-width: 780px; margin: 0 auto; }
+
+  header { margin-bottom: 1.5rem; }
+  h1 { font-family: 'Lora', serif; font-size: 1.8rem; margin-bottom: 0.2rem; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; font-weight: 300; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem; margin-bottom: 1.25rem;
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.1rem;
+  }
+  .stat-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.3rem; }
+  .stat-value { font-family: 'Lora', serif; font-size: 1.4rem; }
+  .stat-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.25rem 1rem 0.75rem; margin-bottom: 1.25rem;
+  }
+  .legend {
+    display: flex; gap: 1.2rem; flex-wrap: wrap;
+    margin-bottom: 1rem; padding: 0 0.25rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--muted); }
+  .leg-line { width: 22px; height: 2.5px; border-radius: 2px; }
+  canvas { width: 100%; display: block; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 0.6rem 1.1rem; font-size: 0.82rem; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--actual); border-bottom-color: var(--actual); }
+
+  .input-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; margin-bottom: 1.25rem;
+  }
+  .tab-content { padding: 1.25rem; display: none; }
+  .tab-content.active { display: block; }
+
+  .input-card h2 { font-family: 'Lora', serif; font-size: 1rem; margin-bottom: 1rem; }
+
+  .input-row { display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 0.75rem; }
+  .input-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+  .input-group label { font-size: 0.75rem; color: var(--muted); }
+
+  input[type="date"], input[type="number"], input[type="text"] {
+    background: var(--input-bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 0.5rem 0.7rem;
+    font-size: 0.88rem; font-family: 'DM Sans', sans-serif;
+    width: 100%; outline: none; transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--actual); }
+
+  .btn {
+    background: var(--actual); color: #fff; border: none; border-radius: 8px;
+    padding: 0.55rem 1.1rem; font-size: 0.88rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; font-weight: 500; transition: opacity 0.2s; white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-event {
+    background: var(--event); color: #1a1612;
+  }
+
+  .btn-sm {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 6px; padding: 0.25rem 0.6rem; font-size: 0.75rem;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .btn-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    font-size: 0.72rem; color: var(--muted); text-align: left;
+    padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); font-weight: 400;
+  }
+  .data-table td {
+    font-size: 0.82rem; padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid rgba(58,52,44,0.5); color: var(--text);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table .kg { font-family: 'Lora', serif; }
+  .diff-pos { color: var(--danger); font-size: 0.75rem; }
+  .diff-neg { color: var(--goal1); font-size: 0.75rem; }
+
+  .event-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--event); margin-right: 4px; }
+
+  .goals-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;
+  }
+  .goals-card h2 { font-family: 'Lora', serif; font-size: 1rem; margin-bottom: 1rem; }
+  .goal-row { display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 0.6rem; }
+  .goal-badge {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.6rem 1rem;
+    font-size: 0.82rem; margin-bottom: 0.5rem;
+  }
+  .goal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .empty-state { text-align: center; color: var(--muted); font-size: 0.82rem; padding: 1.5rem 0; font-style: italic; }
+
+  /* Event badges in goals section */
+  .event-badge {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    background: rgba(240,192,96,0.08); border: 1px solid rgba(240,192,96,0.25);
+    border-radius: 10px; padding: 0.6rem 1rem;
+    font-size: 0.82rem; margin-bottom: 0.5rem;
+  }
+  .events-section-title {
+    font-size: 0.78rem; color: var(--muted); margin: 1rem 0 0.5rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<div id="loadingBar"></div>
+
+<!-- Setup Screen -->
+<div id="setupScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%">
+    <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.5rem">Gewichts-Tracker</h1>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Trag einmalig deine Supabase-Zugangsdaten ein – sie werden im Browser gespeichert.</p>
+    <div style="display:flex;flex-direction:column;gap:0.75rem">
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Supabase URL</label>
+        <input id="setupUrl" type="text" placeholder="https://xxx.supabase.co" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Anon Public Key</label>
+        <input id="setupKey" type="password" placeholder="eyJ..." style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+      </div>
+      <button onclick="initSupabase()" style="background:var(--actual);color:#fff;border:none;border-radius:8px;padding:0.65rem;font-size:0.9rem;font-family:inherit;font-weight:500;cursor:pointer;margin-top:0.25rem">Verbinden</button>
+    </div>
+    <p style="font-size:0.72rem;color:var(--muted);margin-top:1rem;text-align:center">Daten werden nur in deinem Browser gespeichert, nie weitergegeben.</p>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" style="display:none">
+<div class="app">
+
+  <header>
+    <h1>Gewichts-Tracker</h1>
+    <p class="subtitle">Trage Messungen & Events ein – die Kurven aktualisieren sich automatisch</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Aktuell</div>
+      <div class="stat-value" id="statCurrent">–</div>
+      <div class="stat-sub" id="statCurrentDate">–</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Abnahme gesamt</div>
+      <div class="stat-value" id="statTotal">–</div>
+      <div class="stat-sub" id="statTotalDays">–</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Tempo (Ø/Monat)</div>
+      <div class="stat-value" id="statRate">–</div>
+      <div class="stat-sub">auf Basis aller Einträge</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="legend">
+      <div class="legend-item">
+        <div class="leg-line" style="background:var(--actual)"></div>
+        Tatsächlich
+      </div>
+      <div class="legend-item">
+        <svg width="22" height="3"><line x1="0" y1="1.5" x2="22" y2="1.5" stroke="#e05a8a" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
+        Trend verlängert
+      </div>
+      <div class="legend-item">
+        <svg width="22" height="3"><line x1="0" y1="1.5" x2="22" y2="1.5" stroke="#5ab5a0" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
+        Prognose (konservativ)
+      </div>
+      <div class="legend-item">
+        <svg width="14" height="14"><line x1="7" y1="0" x2="7" y2="14" stroke="#f0c060" stroke-width="1.5" stroke-dasharray="3,2"/><circle cx="7" cy="7" r="3" fill="#f0c060"/></svg>
+        Event
+      </div>
+    </div>
+    <canvas id="chart" height="300"></canvas>
+  </div>
+
+  <div class="input-card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('weight', this)">⚖️ Messung</button>
+      <button class="tab" onclick="switchTab('event', this)">📅 Event</button>
+      <button class="tab" onclick="switchTab('cycle', this)">🔄 Zyklus</button>
+    </div>
+
+    <!-- Weight tab -->
+    <div class="tab-content active" id="tab-weight">
+      <h2>Messung eintragen</h2>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Datum</label>
+          <input type="date" id="inputDate">
+        </div>
+        <div class="input-group">
+          <label>Gewicht (kg)</label>
+          <input type="number" id="inputWeight" step="0.05" min="40" max="200" placeholder="z.B. 86.40">
+        </div>
+        <button class="btn" onclick="addEntry()">Eintragen</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Datum</th><th>Gewicht</th><th>Veränderung</th><th></th></tr>
+        </thead>
+        <tbody id="dataBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Event tab -->
+    <div class="tab-content" id="tab-event">
+      <h2>Event eintragen</h2>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Datum</label>
+          <input type="date" id="eventDate">
+        </div>
+        <div class="input-group" style="flex:2">
+          <label>Bezeichnung</label>
+          <input type="text" id="eventName" placeholder="z.B. Hochzeit Jana, Urlaub Mallorca…">
+        </div>
+        <button class="btn btn-event" onclick="addEvent()">Eintragen</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Datum</th><th>Event</th><th>Tatsächlich</th><th>Prognose (trend)</th><th>Prognose (konservativ)</th><th></th></tr>
+        </thead>
+        <tbody id="eventBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Cycle tab -->
+    <div class="tab-content" id="tab-cycle">
+      <h2>Zyklusvergleich</h2>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">Durchschnittsgewicht pro Zykluswoche – Vergleich über Monate.</p>
+      <div class="input-row" style="margin-bottom:1rem;">
+        <div class="input-group">
+          <label>Zyklusstart (Tag 1 der Periode)</label>
+          <input type="date" id="cycleStartDate">
+        </div>
+        <div class="input-group" style="max-width:160px">
+          <label>Bezeichnung (optional)</label>
+          <input type="text" id="cycleName" placeholder="z.B. Jun '26">
+        </div>
+        <button class="btn" style="background:var(--prognose);color:#1a1612" onclick="addCycle()">Hinzufügen</button>
+      </div>
+      <div id="cycleTable"></div>
+    </div>
+  </div>
+
+  <div class="goals-card">
+    <h2>Prognose auf deine Ziele</h2>
+    <div class="goal-row">
+      <div class="input-group">
+        <label>Ziel 1 (kg)</label>
+        <input type="number" id="goal1Input" value="75" step="0.5" min="40" max="200" oninput="renderDebounced()">
+      </div>
+      <div class="input-group">
+        <label>Ziel 2 (kg)</label>
+        <input type="number" id="goal2Input" value="69" step="0.5" min="40" max="200" oninput="renderDebounced()">
+      </div>
+      <div class="input-group" style="max-width:140px">
+        <label>Konserv. Rate (kg/Mo)</label>
+        <input type="number" id="conservativeRate" value="1.5" step="0.1" min="0.5" max="5" oninput="renderDebounced()">
+      </div>
+    </div>
+    <div id="goalBadges"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────────────────────────
+// Load credentials from localStorage
+let SUPABASE_URL = localStorage.getItem('sb_url') || '';
+let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
+let sb = null;
+
+function initSupabase() {
+  const url = document.getElementById('setupUrl')?.value.trim();
+  const key = document.getElementById('setupKey')?.value.trim();
+  if (!url || !key) return;
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  SUPABASE_URL = url;
+  SUPABASE_KEY = key;
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  loadAll();
+}
+
+function checkSetup() {
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  } else {
+    document.getElementById('setupScreen').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+  }
+}
+
+let entries = [];
+let events = [];
+let cycles = [];
+// No seed data in empty version
+
+async function loadAll() {
+  showLoading(true);
+  try {
+    const [eRes, evRes, cRes] = await Promise.all([
+      sb.from('weight_entries').select('*').order('date', {ascending:true}),
+      sb.from('events').select('*').order('date', {ascending:true}),
+      sb.from('cycles').select('*').order('start_date', {ascending:true})
+    ]);
+
+    entries = (eRes.data||[]).map(r => ({date:r.date, kg:parseFloat(r.kg)}));
+    events  = (evRes.data||[]).map(r => ({date:r.date, name:r.name, id:r.id}));
+    cycles  = (cRes.data||[]).map(r => ({start:r.start_date, name:r.name, id:r.id}));
+    render();
+  } catch(e) { console.error('Load error:', e); }
+  showLoading(false);
+}
+
+function showLoading(on) {
+  const el = document.getElementById('loadingBar');
+  if (el) el.style.display = on ? 'block' : 'none';
+}
+
+async function dbAddEntry(date, kg) {
+  await sb.from('weight_entries').upsert({date, kg}, {onConflict:'date'});
+  await loadAll();
+}
+async function dbRemoveEntry(date) {
+  await sb.from('weight_entries').delete().eq('date', date);
+  await loadAll();
+}
+async function dbAddEvent(date, name) {
+  await sb.from('events').insert({date, name});
+  await loadAll();
+}
+async function dbRemoveEvent(id) {
+  await sb.from('events').delete().eq('id', id);
+  await loadAll();
+}
+async function dbAddCycle(start_date, name) {
+  await sb.from('cycles').insert({start_date, name});
+  await loadAll();
+}
+async function dbRemoveCycle(id) {
+  await sb.from('cycles').delete().eq('id', id);
+  await loadAll();
+}
+
+function addCycle() {
+  const start = document.getElementById('cycleStartDate').value;
+  const name = document.getElementById('cycleName').value.trim() || 'Zyklus ' + (cycles.length + 1);
+  if (!start) return;
+  document.getElementById('cycleStartDate').value = '';
+  document.getElementById('cycleName').value = '';
+  dbAddCycle(start, name);
+}
+
+function removeCycle(id) {
+  dbRemoveCycle(id);
+}
+
+function cycleWeekAvg(cycleStart, weekNum) {
+  // weekNum: 1-4, each 7 days
+  const start = parseDate(cycleStart);
+  const dayStart = (weekNum - 1) * 7;
+  const dayEnd = weekNum * 7 - 1;
+  const weekEntries = entries.filter(e => {
+    const days = (parseDate(e.date) - start) / 86400000;
+    return days >= dayStart && days <= dayEnd;
+  });
+  if (weekEntries.length === 0) return null;
+  const avg = weekEntries.reduce((s, e) => s + e.kg, 0) / weekEntries.length;
+  return avg;
+}
+
+function updateCycleTable() {
+  const el = document.getElementById('cycleTable');
+  if (!el) return;
+  if (cycles.length === 0) {
+    el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>';
+    return;
+  }
+
+  const weekLabels = ['Woche 1 (Periode)', 'Woche 2', 'Woche 3', 'Woche 4'];
+
+  // Build header
+  let html = '<table class="data-table" style="font-size:0.8rem"><thead><tr>';
+  html += '<th>Zykluswoche</th>';
+  cycles.forEach(c => {
+    html += `<th style="color:var(--actual)">${c.name} <button class="btn-sm" style="margin-left:4px" onclick="removeCycle(${c.id})">✕</button></th>`;
+  });
+  // Diff column if 2+ cycles
+  if (cycles.length >= 2) html += `<th style="color:var(--prognose)">Veränderung</th>`;
+  html += '</tr></thead><tbody>';
+
+  for (let w = 1; w <= 4; w++) {
+    html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
+    const avgs = cycles.map(c => cycleWeekAvg(c.start, w));
+    avgs.forEach(avg => {
+      if (avg === null) {
+        html += `<td style="color:var(--muted)">–</td>`;
+      } else {
+        html += `<td class="kg">${avg.toFixed(2)} kg</td>`;
+      }
+    });
+    // Diff: last vs first available
+    if (cycles.length >= 2) {
+      const first = avgs.find(a => a !== null);
+      const last = [...avgs].reverse().find(a => a !== null);
+      if (first !== null && last !== null && first !== last) {
+        const diff = last - first;
+        const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+        const sign = diff > 0 ? '+' : '';
+        html += `<td><span class="${cls}">${sign}${diff.toFixed(2)} kg</span></td>`;
+      } else {
+        html += `<td style="color:var(--muted)">–</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+
+  // Row averages
+  html += `<tr style="border-top:1px solid var(--border)"><td style="color:var(--muted);font-style:italic">Ø gesamt</td>`;
+  const totalAvgs = cycles.map(c => {
+    const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
+    return ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
+  });
+  totalAvgs.forEach(avg => {
+    html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
+  });
+  if (cycles.length >= 2) {
+    const first = totalAvgs.find(a => a !== null);
+    const last = [...totalAvgs].reverse().find(a => a !== null);
+    if (first && last && first !== last) {
+      const diff = last - first;
+      const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+      const sign = diff > 0 ? '+' : '';
+      html += `<td><span class="${cls}">${sign}${diff.toFixed(2)} kg</span></td>`;
+    } else html += `<td></td>`;
+  }
+  html += '</tr></tbody></table>';
+
+  el.innerHTML = html;
+}
+
+let renderTimer = null;
+function getConservativeRate() {
+  return parseFloat(document.getElementById('conservativeRate')?.value) || 1.5;
+}
+function renderDebounced() {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(render, 100);
+}
+
+function render() {
+  updateStats(); updateTable(); updateEventTable(); updateGoalBadges(); updateCycleTable(); drawChart();
+}
+
+document.getElementById('inputDate').value = new Date().toISOString().slice(0,10);
+document.getElementById('eventDate').value = new Date().toISOString().slice(0,10);
+window.addEventListener('resize', render);
+checkSetup();
+</script>
+</div>
+</body>
+</html>
