@@ -411,10 +411,7 @@ function addEvent() {
   dbAddEvent(date, name);
 }
 
-function removeEvent(date, name) {
-  events = events.filter(e => !(e.date === date && e.name === name));
-  render();
-}
+function removeEvent(id) { dbRemoveEvent(id); }
 
 // Stats
 function updateStats() {
@@ -528,8 +525,8 @@ function updateGoalBadges() {
       <div class="goal-badge">
         <div class="goal-dot" style="background:var(--prognose)"></div>
         <div>
-          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:2px">Ziel ${g} kg · konservative Prognose (konservativ)</div>
-          <div>${arrivalStr(last.kg, g, 1.8, last.date)}</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:2px">Ziel ${g} kg · konservative Prognose (${getConservativeRate().toFixed(1)} kg/Mo)</div>
+          <div>${arrivalStr(last.kg, g, getConservativeRate(), last.date)}</div>
         </div>
       </div>`;
   });
