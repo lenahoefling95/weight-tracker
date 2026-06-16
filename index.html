@@ -774,39 +774,32 @@ function updateCycleTable() {
 
   const weekLabels = ['Woche 1 (Periode)', 'Woche 2', 'Woche 3', 'Woche 4'];
 
-  // Build header
+  // Build header: each cycle + diff to previous
   let html = '<table class="data-table" style="font-size:0.8rem"><thead><tr>';
   html += '<th>Zykluswoche</th>';
-  cycles.forEach(c => {
+  cycles.forEach((c, i) => {
     html += `<th style="color:var(--actual)">${c.name} <button class="btn-sm" style="margin-left:4px" onclick="removeCycle(${c.id})">✕</button></th>`;
+    if (i > 0) html += `<th style="color:var(--prognose);font-size:0.7rem">vs. vorher</th>`;
   });
-  // Diff column if 2+ cycles
-  if (cycles.length >= 2) html += `<th style="color:var(--prognose)">Veränderung</th>`;
   html += '</tr></thead><tbody>';
 
   for (let w = 1; w <= 4; w++) {
     html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
     const avgs = cycles.map(c => cycleWeekAvg(c.start, w));
-    avgs.forEach(avg => {
-      if (avg === null) {
-        html += `<td style="color:var(--muted)">–</td>`;
-      } else {
-        html += `<td class="kg">${avg.toFixed(2)} kg</td>`;
+    avgs.forEach((avg, i) => {
+      html += avg !== null ? `<td class="kg">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
+      if (i > 0) {
+        const prev = avgs[i-1];
+        if (avg !== null && prev !== null) {
+          const diff = avg - prev;
+          const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+          const sign = diff > 0 ? '+' : '';
+          html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
+        } else {
+          html += `<td style="color:var(--muted)">–</td>`;
+        }
       }
     });
-    // Diff: last vs first available
-    if (cycles.length >= 2) {
-      const first = avgs.find(a => a !== null);
-      const last = [...avgs].reverse().find(a => a !== null);
-      if (first !== null && last !== null && first !== last) {
-        const diff = last - first;
-        const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
-        const sign = diff > 0 ? '+' : '';
-        html += `<td><span class="${cls}">${sign}${diff.toFixed(2)} kg</span></td>`;
-      } else {
-        html += `<td style="color:var(--muted)">–</td>`;
-      }
-    }
     html += '</tr>';
   }
 
@@ -816,19 +809,20 @@ function updateCycleTable() {
     const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
     return ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
   });
-  totalAvgs.forEach(avg => {
+  totalAvgs.forEach((avg, i) => {
     html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
+    if (i > 0) {
+      const prev = totalAvgs[i-1];
+      if (avg !== null && prev !== null) {
+        const diff = avg - prev;
+        const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+        const sign = diff > 0 ? '+' : '';
+        html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
+      } else {
+        html += `<td style="color:var(--muted)">–</td>`;
+      }
+    }
   });
-  if (cycles.length >= 2) {
-    const first = totalAvgs.find(a => a !== null);
-    const last = [...totalAvgs].reverse().find(a => a !== null);
-    if (first && last && first !== last) {
-      const diff = last - first;
-      const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
-      const sign = diff > 0 ? '+' : '';
-      html += `<td><span class="${cls}">${sign}${diff.toFixed(2)} kg</span></td>`;
-    } else html += `<td></td>`;
-  }
   html += '</tr></tbody></table>';
 
   el.innerHTML = html;
