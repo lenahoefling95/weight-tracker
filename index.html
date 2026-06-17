@@ -148,16 +148,63 @@
 </head>
 <body>
 <div id="loadingBar"></div>
-<div id="setupScreen" style="display:flex;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+<!-- Step 1: Onboarding -->
+<div id="onboardingScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:460px;width:100%">
+    <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.3rem">Willkommen! 👋</h1>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Erzähl mir kurz etwas über dich – einmalig, wird im Browser gespeichert.</p>
+    <div style="display:flex;flex-direction:column;gap:0.9rem">
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Dein Name</label>
+        <input id="onboardName" type="text" placeholder="Dein Name" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Geschlecht</label>
+        <div style="display:flex;gap:0.5rem">
+          <button id="genderF" onclick="selectGender('w')" style="flex:1;padding:0.55rem;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--muted);font-family:inherit;cursor:pointer;transition:all 0.2s">♀ Weiblich</button>
+          <button id="genderM" onclick="selectGender('m')" style="flex:1;padding:0.55rem;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--muted);font-family:inherit;cursor:pointer;transition:all 0.2s">♂ Männlich</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.6rem">
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Alter</label>
+          <input id="onboardAge" type="number" placeholder="Dein Alter" min="10" max="120" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Größe (cm)</label>
+          <input id="onboardHeight" type="number" placeholder="Deine Größe" min="100" max="250" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+        </div>
+      </div>
+      <div style="display:flex;gap:0.6rem">
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Startgewicht (kg)</label>
+          <input id="onboardStart" type="number" step="0.1" placeholder="Aktuelles Gewicht" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Zielgewicht (kg)</label>
+          <input id="onboardGoal" type="number" step="0.1" placeholder="Dein Ziel" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Gewünschtes Tempo (kg/Monat)</label>
+        <input id="onboardRate" type="number" step="0.1" placeholder="Gewünschte Abnahme pro Monat" min="0.5" max="5" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none">
+      </div>
+      <button onclick="saveOnboarding()" style="background:var(--actual);color:#fff;border:none;border-radius:8px;padding:0.65rem;font-size:0.9rem;font-family:inherit;font-weight:500;cursor:pointer;margin-top:0.25rem">Weiter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Supabase Setup -->
+<div id="setupScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
   <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%">
-    <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.5rem">Gewichts-Tracker</h1>
-    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Trag deine Supabase-Zugangsdaten ein.</p>
+    <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.5rem">Datenbank verbinden</h1>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem">Einmalig – deine Zugangsdaten bleiben im Browser.</p>
     <div style="display:flex;flex-direction:column;gap:0.75rem">
       <div><label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Supabase URL</label>
         <input id="setupUrl" type="text" placeholder="https://xxx.supabase.co" style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none"></div>
       <div><label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.3rem">Anon Public Key</label>
         <input id="setupKey" type="password" placeholder="eyJ..." style="background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.8rem;font-size:0.88rem;width:100%;font-family:inherit;outline:none"></div>
-      <button onclick="initSupabase()" style="background:var(--actual);color:#fff;border:none;border-radius:8px;padding:0.65rem;font-size:0.9rem;font-family:inherit;font-weight:500;cursor:pointer;margin-top:0.25rem">Verbinden</button>
+      <button onclick="initSupabase()" style="background:var(--actual);color:#fff;border:none;border-radius:8px;padding:0.65rem;font-size:0.9rem;font-family:inherit;font-weight:500;cursor:pointer;margin-top:0.25rem">Verbinden & loslegen</button>
     </div>
   </div>
 </div>
@@ -303,10 +350,97 @@
 // ── Supabase ─────────────────────────────────────────────────────────────────
 let sb = null;
 
+// ── Persistent storage (localStorage with cookie fallback) ───────────────────
+function store(key, val) {
+  try { localStorage.setItem(key, val); } catch(e) {}
+  // Cookie fallback for Edge tracking prevention
+  document.cookie = key + '=' + encodeURIComponent(val) + ';path=/;max-age=31536000;SameSite=Lax';
+}
+function retrieve(key) {
+  try { const v = localStorage.getItem(key); if (v) return v; } catch(e) {}
+  const match = document.cookie.match('(?:^|; )' + key + '=([^;]*)');
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ── Onboarding ────────────────────────────────────────────────────────────────
+let userProfile = {};
+let selectedGender = '';
+
+function selectGender(g) {
+  selectedGender = g;
+  ['genderF','genderM'].forEach(id => {
+    document.getElementById(id).style.background = 'var(--input-bg)';
+    document.getElementById(id).style.color = 'var(--muted)';
+    document.getElementById(id).style.borderColor = 'var(--border)';
+  });
+  const map = {w:'genderF', m:'genderM'};
+  document.getElementById(map[g]).style.background = 'var(--actual)';
+  document.getElementById(map[g]).style.color = '#fff';
+  document.getElementById(map[g]).style.borderColor = 'var(--actual)';
+}
+
+function saveOnboarding() {
+  const name = document.getElementById('onboardName').value.trim();
+  if (!name || !selectedGender) { alert('Bitte Name und Geschlecht eingeben!'); return; }
+  userProfile = {
+    name, gender: selectedGender,
+    age: document.getElementById('onboardAge').value,
+    height: document.getElementById('onboardHeight').value,
+    startKg: document.getElementById('onboardStart').value,
+    goalKg: document.getElementById('onboardGoal').value,
+    rate: document.getElementById('onboardRate').value
+  };
+  store('wt_profile', JSON.stringify(userProfile));
+  applyProfile();
+  document.getElementById('onboardingScreen').style.display = 'none';
+  const url = retrieve('wt_url');
+  const key = retrieve('wt_key');
+  if (url && key) {
+    sb = supabase.createClient(url, key);
+    document.getElementById('mainApp').style.display = 'block';
+    // Load first, then seed start weight if DB is empty
+    loadAllThenSeedIfEmpty();
+  } else {
+    document.getElementById('setupScreen').style.display = 'flex';
+  }
+}
+
+function applyProfile() {
+  // Hide/show cycle tab based on gender
+  const cycleTab = document.querySelector('button[onclick*="cycle"]');
+  const cycleContent = document.getElementById('tab-cycle');
+  if (userProfile.gender === 'm') {
+    if (cycleTab) cycleTab.style.display = 'none';
+    if (cycleContent) cycleContent.style.display = 'none';
+  } else {
+    if (cycleTab) cycleTab.style.display = '';
+  }
+  // Apply goal and rate
+  if (userProfile.goalKg) {
+    const g1 = document.getElementById('goal1Input');
+    const g2 = document.getElementById('goal2Input');
+    if (g1) g1.value = userProfile.goalKg;
+    if (g2) g2.value = userProfile.goalKg;
+  }
+  if (userProfile.rate) {
+    const r = document.getElementById('conservativeRate');
+    if (r) r.value = userProfile.rate;
+  }
+  // Personalize header
+  if (userProfile.name) {
+    const headerEl = document.querySelector('header h1');
+    if (headerEl) headerEl.textContent = 'Hallo, ' + userProfile.name + '! 👋';
+    const subtitleEl = document.querySelector('header .subtitle');
+    if (subtitleEl) subtitleEl.textContent = 'Dein persönlicher Gewichts-Tracker';
+  }
+}
+
 function initSupabase() {
   const url = document.getElementById('setupUrl').value.trim();
   const key = document.getElementById('setupKey').value.trim();
   if (!url || !key) return;
+  store('wt_url', url);
+  store('wt_key', key);
   sb = supabase.createClient(url, key);
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
@@ -329,6 +463,29 @@ async function loadAll() {
     entries = (eRes.data||[]).map(r => ({date:r.date, kg:parseFloat(r.kg)}));
     events  = (evRes.data||[]).map(r => ({date:r.date, name:r.name, id:r.id}));
     cycles  = (cRes.data||[]).map(r => ({start:r.start_date, name:r.name, id:r.id}));
+    render();
+  } catch(e) { console.error(e); }
+  showLoading(false);
+}
+
+async function loadAllThenSeedIfEmpty() {
+  if (!sb) return;
+  showLoading(true);
+  try {
+    const [eRes, evRes, cRes] = await Promise.all([
+      sb.from('weight_entries').select('*').order('date', {ascending:true}),
+      sb.from('events').select('*').order('date', {ascending:true}),
+      sb.from('cycles').select('*').order('start_date', {ascending:true})
+    ]);
+    entries = (eRes.data||[]).map(r => ({date:r.date, kg:parseFloat(r.kg)}));
+    events  = (evRes.data||[]).map(r => ({date:r.date, name:r.name, id:r.id}));
+    cycles  = (cRes.data||[]).map(r => ({start:r.start_date, name:r.name, id:r.id}));
+    // Only seed start weight if DB is completely empty
+    if (entries.length === 0 && userProfile.startKg) {
+      const today = new Date().toISOString().slice(0,10);
+      await sb.from('weight_entries').insert({date: today, kg: parseFloat(userProfile.startKg)});
+      entries = [{date: today, kg: parseFloat(userProfile.startKg)}];
+    }
     render();
   } catch(e) { console.error(e); }
   showLoading(false);
@@ -844,6 +1001,32 @@ function render() {
 document.getElementById('inputDate').value = new Date().toISOString().slice(0,10);
 document.getElementById('eventDate').value = new Date().toISOString().slice(0,10);
 window.addEventListener('resize', render);
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(function boot() {
+  const profile = retrieve('wt_profile');
+  const url = retrieve('wt_url');
+  const key = retrieve('wt_key');
+
+  if (profile) {
+    userProfile = JSON.parse(profile);
+    // Apply profile after DOM ready
+    setTimeout(applyProfile, 0);
+  }
+
+  if (url && key) {
+    // All set – go straight to app
+    sb = supabase.createClient(url, key);
+    document.getElementById('mainApp').style.display = 'block';
+    loadAllThenSeedIfEmpty();
+  } else if (profile) {
+    // Profile done, but no DB yet
+    document.getElementById('setupScreen').style.display = 'flex';
+  } else {
+    // First time – show onboarding
+    document.getElementById('onboardingScreen').style.display = 'flex';
+  }
+})();
 </script>
 </div></div>
 </body>
