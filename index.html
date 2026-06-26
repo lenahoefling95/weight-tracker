@@ -924,7 +924,8 @@ function cycleWeekAvg(cycleStart, weekNum) {
 function updateCycleTable() {
   const el = document.getElementById('cycleTable');
   if (!el) return;
-  if (cycles.length === 0) {
+  const displayCycles = cycles.slice(-3);
+  if (displayCycles.length === 0) {
     el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>';
     return;
   }
@@ -934,7 +935,7 @@ function updateCycleTable() {
   // Build header: each cycle + diff to previous
   let html = '<table class="data-table" style="font-size:0.8rem"><thead><tr>';
   html += '<th>Zykluswoche</th>';
-  cycles.forEach((c, i) => {
+  displayCycles.forEach((c, i) => {
     html += `<th style="color:var(--actual)">${c.name} <button class="btn-sm" style="margin-left:4px" onclick="removeCycle(${c.id})">✕</button></th>`;
     if (i > 0) html += `<th style="color:var(--prognose);font-size:0.7rem">vs. vorher</th>`;
   });
@@ -942,7 +943,7 @@ function updateCycleTable() {
 
   for (let w = 1; w <= 4; w++) {
     html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
-    const avgs = cycles.map(c => cycleWeekAvg(c.start, w));
+    const avgs = displayCycles.map(c => cycleWeekAvg(c.start, w));
     avgs.forEach((avg, i) => {
       html += avg !== null ? `<td class="kg">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
       if (i > 0) {
@@ -962,7 +963,7 @@ function updateCycleTable() {
 
   // Row averages
   html += `<tr style="border-top:1px solid var(--border)"><td style="color:var(--muted);font-style:italic">Ø gesamt</td>`;
-  const totalAvgs = cycles.map(c => {
+  const totalAvgs = displayCycles.map(c => {
     const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
     return ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
   });
