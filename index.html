@@ -971,10 +971,11 @@ function updateCycleTable() {
     const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
     const avg = ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
     html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
-    if (i > 0) {
+    {
       const fullIdx = cycles.indexOf(c);
       const prevCycle = fullIdx > 0 ? cycles[fullIdx - 1] : null;
-      const pws = prevCycle ? [1,2,3,4].map(w => cycleWeekAvg(prevCycle.start, w)).filter(v => v !== null) : [];
+      if (prevCycle) {
+      const pws = [1,2,3,4].map(w => cycleWeekAvg(prevCycle.start, w)).filter(v => v !== null);
       const prevAvg = pws.length > 0 ? pws.reduce((s,v) => s+v, 0) / pws.length : null;
       if (avg !== null && prevAvg !== null) {
         const diff = avg - prevAvg;
@@ -983,6 +984,7 @@ function updateCycleTable() {
         html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
       } else {
         html += `<td style="color:var(--muted)">–</td>`;
+      }
       }
     }
   });
