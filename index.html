@@ -941,15 +941,19 @@ function updateCycleTable() {
   });
   html += '</tr></thead><tbody>';
 
+  // For diff: we need the predecessor of each displayCycle from the full cycles array
   for (let w = 1; w <= 4; w++) {
     html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
-    const avgs = displayCycles.map(c => cycleWeekAvg(c.start, w));
-    avgs.forEach((avg, i) => {
+    displayCycles.forEach((c, i) => {
+      const avg = cycleWeekAvg(c.start, w);
       html += avg !== null ? `<td class="kg">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
-      if (i > 0) {
-        const prev = avgs[i-1];
-        if (avg !== null && prev !== null) {
-          const diff = avg - prev;
+      // Find predecessor in full cycles array
+      const fullIdx = cycles.indexOf(c);
+      const prevCycle = fullIdx > 0 ? cycles[fullIdx - 1] : null;
+      const prevAvg = prevCycle ? cycleWeekAvg(prevCycle.start, w) : null;
+      if (prevCycle) {
+        if (avg !== null && prevAvg !== null) {
+          const diff = avg - prevAvg;
           const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
           const sign = diff > 0 ? '+' : '';
           html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
@@ -963,16 +967,17 @@ function updateCycleTable() {
 
   // Row averages
   html += `<tr style="border-top:1px solid var(--border)"><td style="color:var(--muted);font-style:italic">Ø gesamt</td>`;
-  const totalAvgs = displayCycles.map(c => {
+  displayCycles.forEach((c, i) => {
     const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
-    return ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
-  });
-  totalAvgs.forEach((avg, i) => {
+    const avg = ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
     html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
-    if (i > 0) {
-      const prev = totalAvgs[i-1];
-      if (avg !== null && prev !== null) {
-        const diff = avg - prev;
+    const fullIdx = cycles.indexOf(c);
+    const prevCycle = fullIdx > 0 ? cycles[fullIdx - 1] : null;
+    if (prevCycle) {
+      const pws = [1,2,3,4].map(w => cycleWeekAvg(prevCycle.start, w)).filter(v => v !== null);
+      const prevAvg = pws.length > 0 ? pws.reduce((s,v) => s+v, 0) / pws.length : null;
+      if (avg !== null && prevAvg !== null) {
+        const diff = avg - prevAvg;
         const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
         const sign = diff > 0 ? '+' : '';
         html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
