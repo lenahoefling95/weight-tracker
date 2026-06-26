@@ -924,6 +924,92 @@ function cycleWeekAvg(cycleStart, weekNum) {
 function updateCycleTable() {
   const el = document.getElementById('cycleTable');
   if (!el) return;
+  if (cycles.length === 0) {
+    el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>';
+    return;
+  }
+
+  // Always show last 3 cycles
+  const displayCycles = cycles.slice(-3);
+  const weekLabels = ['Woche 1 (Periode)', 'Woche 2', 'Woche 3', 'Woche 4'];
+
+  // Build column structure: for each displayCycle, check if it has a DB predecessor
+  // Header
+  let html = '<table class="data-table" style="font-size:0.8rem"><thead><tr><th>Zykluswoche</th>';
+  displayCycles.forEach(c => {
+    const fullIdx = cycles.indexOf(c);
+    const prev = fullIdx > 0 ? cycles[fullIdx - 1] : null;
+    html += `<th style="color:var(--actual)">${c.name} <button class="btn-sm" style="margin-left:4px" onclick="removeCycle(${c.id})">✕</button></th>`;
+    if (prev) html += `<th style="color:var(--prognose);font-size:0.7rem">vs. ${prev.name}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  // Rows
+  for (let w = 1; w <= 4; w++) {
+    html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
+    displayCycles.forEach(c => {
+      const fullIdx = cycles.indexOf(c);
+      const prev = fullIdx > 0 ? cycles[fullIdx - 1] : null;
+      const avg = cycleWeekAvg(c.start, w);
+      html += avg !== null ? `<td class="kg">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
+      if (prev) {
+        const prevAvg = cycleWeekAvg(prev.start, w);
+        if (avg !== null && prevAvg !== null) {
+          const diff = avg - prevAvg;
+          const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+          const sign = diff > 0 ? '+' : '';
+          html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
+        } else {
+          html += `<td style="color:var(--muted)">–</td>`;
+        }
+      }
+    });
+    html += '</tr>';
+  }
+
+  // Totals row
+  html += `<tr style="border-top:1px solid var(--border)"><td style="color:var(--muted);font-style:italic">Ø gesamt</td>`;
+  displayCycles.forEach(c => {
+    const fullIdx = cycles.indexOf(c);
+    const prev = fullIdx > 0 ? cycles[fullIdx - 1] : null;
+    const ws = [1,2,3,4].map(w => cycleWeekAvg(c.start, w)).filter(v => v !== null);
+    const avg = ws.length > 0 ? ws.reduce((s,v) => s+v, 0) / ws.length : null;
+    html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
+    if (prev) {
+      const pws = [1,2,3,4].map(w => cycleWeekAvg(prev.start, w)).filter(v => v !== null);
+      const prevAvg = pws.length > 0 ? pws.reduce((s,v) => s+v, 0) / pws.length : null;
+      if (avg !== null && prevAvg !== null) {
+        const diff = avg - prevAvg;
+        const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
+        const sign = diff > 0 ? '+' : '';
+        html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
+      } else {
+        html += `<td style="color:var(--muted)">–</td>`;
+      }
+    }
+  });
+  html += '</tr></tbody></table>';
+  el.innerHTML = html;
+}
+
+
+function cycleWeekAvg(cycleStart, weekNum) {
+  // weekNum: 1-4, each 7 days
+  const start = parseDate(cycleStart);
+  const dayStart = (weekNum - 1) * 7;
+  const dayEnd = weekNum * 7 - 1;
+  const weekEntries = entries.filter(e => {
+    const days = (parseDate(e.date) - start) / 86400000;
+    return days >= dayStart && days <= dayEnd;
+  });
+  if (weekEntries.length === 0) return null;
+  const avg = weekEntries.reduce((s, e) => s + e.kg, 0) / weekEntries.length;
+  return avg;
+}
+
+function updateCycleTable() {
+  const el = document.getElementById('cycleTable');
+  if (!el) return;
   const displayCycles = cycles.slice(-3);
   if (displayCycles.length === 0) {
     el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>';
