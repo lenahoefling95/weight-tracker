@@ -947,11 +947,12 @@ function updateCycleTable() {
     displayCycles.forEach((c, i) => {
       const avg = cycleWeekAvg(c.start, w);
       html += avg !== null ? `<td class="kg">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
-      // Find predecessor in full cycles array
+      // Only show diff if predecessor is visible in displayCycles
       const fullIdx = cycles.indexOf(c);
       const prevCycle = fullIdx > 0 ? cycles[fullIdx - 1] : null;
       const prevAvg = prevCycle ? cycleWeekAvg(prevCycle.start, w) : null;
-      if (prevCycle) {
+      const prevVisible = displayCycles.includes(prevCycle);
+      if (prevCycle && prevVisible) {
         if (avg !== null && prevAvg !== null) {
           const diff = avg - prevAvg;
           const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
@@ -973,7 +974,7 @@ function updateCycleTable() {
     html += avg !== null ? `<td class="kg" style="font-style:italic">${avg.toFixed(2)} kg</td>` : `<td style="color:var(--muted)">–</td>`;
     const fullIdx = cycles.indexOf(c);
     const prevCycle = fullIdx > 0 ? cycles[fullIdx - 1] : null;
-    if (prevCycle) {
+    if (prevCycle && displayCycles.includes(prevCycle)) {
       const pws = [1,2,3,4].map(w => cycleWeekAvg(prevCycle.start, w)).filter(v => v !== null);
       const prevAvg = pws.length > 0 ? pws.reduce((s,v) => s+v, 0) / pws.length : null;
       if (avg !== null && prevAvg !== null) {
