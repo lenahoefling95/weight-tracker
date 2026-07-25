@@ -54,7 +54,6 @@
   .leg-line { width: 22px; height: 2.5px; border-radius: 2px; }
   canvas { width: 100%; display: block; }
 
-  /* Tabs */
   .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 1px solid var(--border); }
   .tab {
     padding: 0.6rem 1.1rem; font-size: 0.82rem; cursor: pointer;
@@ -70,7 +69,6 @@
   }
   .tab-content { padding: 1.25rem; display: none; }
   .tab-content.active { display: block; }
-
   .input-card h2 { font-family: 'Lora', serif; font-size: 1rem; margin-bottom: 1rem; }
 
   .input-row { display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 0.75rem; }
@@ -91,9 +89,7 @@
     cursor: pointer; font-weight: 500; transition: opacity 0.2s; white-space: nowrap;
   }
   .btn:hover { opacity: 0.85; }
-  .btn-event {
-    background: var(--event); color: #1a1612;
-  }
+  .btn-event { background: var(--event); color: #1a1612; }
 
   .btn-sm {
     background: transparent; border: 1px solid var(--border); color: var(--muted);
@@ -133,7 +129,6 @@
   .goal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
   .empty-state { text-align: center; color: var(--muted); font-size: 0.82rem; padding: 1.5rem 0; font-style: italic; }
 
-  /* Event badges in goals section */
   .event-badge {
     display: flex; align-items: flex-start; gap: 0.5rem;
     background: rgba(240,192,96,0.08); border: 1px solid rgba(240,192,96,0.25);
@@ -148,7 +143,8 @@
 </head>
 <body>
 <div id="loadingBar"></div>
-<!-- Step 1: Onboarding -->
+
+<!-- Onboarding -->
 <div id="onboardingScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
   <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:460px;width:100%">
     <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.3rem">Willkommen! 👋</h1>
@@ -194,7 +190,7 @@
   </div>
 </div>
 
-<!-- Step 2: Supabase Setup -->
+<!-- Supabase Setup -->
 <div id="setupScreen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
   <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%">
     <h1 style="font-family:'Lora',serif;font-size:1.5rem;margin-bottom:0.5rem">Datenbank verbinden</h1>
@@ -208,8 +204,8 @@
     </div>
   </div>
 </div>
-<div id="mainApp" style="display:none"><div class="app">
 
+<div id="mainApp" style="display:none"><div class="app">
   <header>
     <h1>Gewichts-Tracker</h1>
     <p class="subtitle">Trage Messungen & Events ein – die Kurven aktualisieren sich automatisch</p>
@@ -235,10 +231,7 @@
 
   <div class="chart-card">
     <div class="legend">
-      <div class="legend-item">
-        <div class="leg-line" style="background:var(--actual)"></div>
-        Tatsächlich
-      </div>
+      <div class="legend-item"><div class="leg-line" style="background:var(--actual)"></div>Tatsächlich</div>
       <div class="legend-item">
         <svg width="22" height="3"><line x1="0" y1="1.5" x2="22" y2="1.5" stroke="#e05a8a" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
         Trend verlängert
@@ -261,64 +254,36 @@
       <button class="tab" onclick="switchTab('event', this)">📅 Event</button>
       <button class="tab" onclick="switchTab('cycle', this)">🔄 Zyklus</button>
     </div>
-
-    <!-- Weight tab -->
     <div class="tab-content active" id="tab-weight">
       <h2>Messung eintragen</h2>
       <div class="input-row">
-        <div class="input-group">
-          <label>Datum</label>
-          <input type="date" id="inputDate">
-        </div>
-        <div class="input-group">
-          <label>Gewicht (kg)</label>
-          <input type="number" id="inputWeight" step="0.05" min="40" max="200" placeholder="z.B. 86.40">
-        </div>
+        <div class="input-group"><label>Datum</label><input type="date" id="inputDate"></div>
+        <div class="input-group"><label>Gewicht (kg)</label><input type="number" id="inputWeight" step="0.05" min="40" max="200" placeholder="z.B. 86.40"></div>
         <button class="btn" onclick="addEntry()">Eintragen</button>
       </div>
       <table class="data-table">
-        <thead>
-          <tr><th>Datum</th><th>Gewicht</th><th>Veränderung</th><th></th></tr>
-        </thead>
+        <thead><tr><th>Datum</th><th>Gewicht</th><th>Veränderung</th><th></th></tr></thead>
         <tbody id="dataBody"></tbody>
       </table>
     </div>
-
-    <!-- Event tab -->
     <div class="tab-content" id="tab-event">
       <h2>Event eintragen</h2>
       <div class="input-row">
-        <div class="input-group">
-          <label>Datum</label>
-          <input type="date" id="eventDate">
-        </div>
-        <div class="input-group" style="flex:2">
-          <label>Bezeichnung</label>
-          <input type="text" id="eventName" placeholder="z.B. Hochzeit Jana, Urlaub Mallorca…">
-        </div>
+        <div class="input-group"><label>Datum</label><input type="date" id="eventDate"></div>
+        <div class="input-group" style="flex:2"><label>Bezeichnung</label><input type="text" id="eventName" placeholder="z.B. Hochzeit Jana, Urlaub Mallorca…"></div>
         <button class="btn btn-event" onclick="addEvent()">Eintragen</button>
       </div>
       <table class="data-table">
-        <thead>
-          <tr><th>Datum</th><th>Event</th><th>Tatsächlich</th><th>Prognose (trend)</th><th>Prognose (konservativ)</th><th></th></tr>
-        </thead>
+        <thead><tr><th>Datum</th><th>Event</th><th>Tatsächlich</th><th>Prognose (trend)</th><th>Prognose (konservativ)</th><th></th></tr></thead>
         <tbody id="eventBody"></tbody>
       </table>
     </div>
-
-    <!-- Cycle tab -->
     <div class="tab-content" id="tab-cycle">
       <h2>Zyklusvergleich</h2>
       <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;">Durchschnittsgewicht pro Zykluswoche – Vergleich über Monate.</p>
       <div class="input-row" style="margin-bottom:1rem;">
-        <div class="input-group">
-          <label>Zyklusstart (Tag 1 der Periode)</label>
-          <input type="date" id="cycleStartDate">
-        </div>
-        <div class="input-group" style="max-width:160px">
-          <label>Bezeichnung (optional)</label>
-          <input type="text" id="cycleName" placeholder="z.B. Jun '26">
-        </div>
+        <div class="input-group"><label>Zyklusstart (Tag 1 der Periode)</label><input type="date" id="cycleStartDate"></div>
+        <div class="input-group" style="max-width:160px"><label>Bezeichnung (optional)</label><input type="text" id="cycleName" placeholder="z.B. Jun '26"></div>
         <button class="btn" style="background:var(--prognose);color:#1a1612" onclick="addCycle()">Hinzufügen</button>
       </div>
       <div id="cycleTable"></div>
@@ -330,36 +295,48 @@
     <div class="goal-row">
       <div class="input-group">
         <label>Ziel 1 (kg)</label>
-        <input type="number" id="goal1Input" value="75" step="0.5" min="40" max="200" oninput="renderDebounced()">
+        <input type="number" id="goal1Input" value="75" step="0.5" min="40" max="200" oninput="saveGoals(); renderDebounced()">
       </div>
       <div class="input-group">
         <label>Ziel 2 (kg)</label>
-        <input type="number" id="goal2Input" value="69" step="0.5" min="40" max="200" oninput="renderDebounced()">
+        <input type="number" id="goal2Input" value="69" step="0.5" min="40" max="200" oninput="saveGoals(); renderDebounced()">
       </div>
       <div class="input-group" style="max-width:140px">
         <label>Konserv. Rate (kg/Mo)</label>
-        <input type="number" id="conservativeRate" value="1.5" step="0.1" min="0.5" max="5" oninput="renderDebounced()">
+        <input type="number" id="conservativeRate" value="1.5" step="0.1" min="0.5" max="5" oninput="saveGoals(); renderDebounced()">
       </div>
     </div>
     <div id="goalBadges"></div>
   </div>
-
 </div>
 
 <script>
-// ── Supabase ─────────────────────────────────────────────────────────────────
 let sb = null;
 
-// ── Persistent storage (localStorage with cookie fallback) ───────────────────
 function store(key, val) {
   try { localStorage.setItem(key, val); } catch(e) {}
-  // Cookie fallback for Edge tracking prevention
   document.cookie = key + '=' + encodeURIComponent(val) + ';path=/;max-age=31536000;SameSite=Lax';
 }
 function retrieve(key) {
   try { const v = localStorage.getItem(key); if (v) return v; } catch(e) {}
   const match = document.cookie.match('(?:^|; )' + key + '=([^;]*)');
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ── Goals persistence ─────────────────────────────────────────────────────────
+function saveGoals() {
+  store('wt_goal1', document.getElementById('goal1Input').value);
+  store('wt_goal2', document.getElementById('goal2Input').value);
+  store('wt_rate',  document.getElementById('conservativeRate').value);
+}
+
+function loadGoals() {
+  const g1   = retrieve('wt_goal1');
+  const g2   = retrieve('wt_goal2');
+  const rate = retrieve('wt_rate');
+  if (g1)   document.getElementById('goal1Input').value = g1;
+  if (g2)   document.getElementById('goal2Input').value = g2;
+  if (rate) document.getElementById('conservativeRate').value = rate;
 }
 
 // ── Onboarding ────────────────────────────────────────────────────────────────
@@ -392,13 +369,16 @@ function saveOnboarding() {
   };
   store('wt_profile', JSON.stringify(userProfile));
   applyProfile();
+  // Save onboarding values as initial goals (only if not already saved)
+  if (!retrieve('wt_goal1') && userProfile.goalKg) store('wt_goal1', userProfile.goalKg);
+  if (!retrieve('wt_goal2') && userProfile.goalKg) store('wt_goal2', userProfile.goalKg);
+  if (!retrieve('wt_rate')  && userProfile.rate)   store('wt_rate',  userProfile.rate);
   document.getElementById('onboardingScreen').style.display = 'none';
   const url = retrieve('wt_url');
   const key = retrieve('wt_key');
   if (url && key) {
     sb = supabase.createClient(url, key);
     document.getElementById('mainApp').style.display = 'block';
-    // Load first, then seed start weight if DB is empty
     loadAllThenSeedIfEmpty();
   } else {
     document.getElementById('setupScreen').style.display = 'flex';
@@ -406,7 +386,6 @@ function saveOnboarding() {
 }
 
 function applyProfile() {
-  // Hide/show cycle tab based on gender
   const cycleTab = document.querySelector('button[onclick*="cycle"]');
   const cycleContent = document.getElementById('tab-cycle');
   if (userProfile.gender === 'm') {
@@ -415,18 +394,6 @@ function applyProfile() {
   } else {
     if (cycleTab) cycleTab.style.display = '';
   }
-  // Apply goal and rate
-  if (userProfile.goalKg) {
-    const g1 = document.getElementById('goal1Input');
-    const g2 = document.getElementById('goal2Input');
-    if (g1) g1.value = userProfile.goalKg;
-    if (g2) g2.value = userProfile.goalKg;
-  }
-  if (userProfile.rate) {
-    const r = document.getElementById('conservativeRate');
-    if (r) r.value = userProfile.rate;
-  }
-  // Personalize header
   if (userProfile.name) {
     const headerEl = document.querySelector('header h1');
     if (headerEl) headerEl.textContent = 'Hallo, ' + userProfile.name + '! 👋';
@@ -480,7 +447,6 @@ async function loadAllThenSeedIfEmpty() {
     entries = (eRes.data||[]).map(r => ({date:r.date, kg:parseFloat(r.kg)}));
     events  = (evRes.data||[]).map(r => ({date:r.date, name:r.name, id:r.id}));
     cycles  = (cRes.data||[]).map(r => ({start:r.start_date, name:r.name, id:r.id}));
-    // Only seed start weight if DB is completely empty
     if (entries.length === 0 && userProfile.startKg) {
       const today = new Date().toISOString().slice(0,10);
       await sb.from('weight_entries').insert({date: today, kg: parseFloat(userProfile.startKg)});
@@ -498,9 +464,7 @@ async function dbRemoveEvent(id) { await sb.from('events').delete().eq('id', id)
 async function dbAddCycle(start_date, name) { await sb.from('cycles').insert({start_date, name}); await loadAll(); }
 async function dbRemoveCycle(id) { await sb.from('cycles').delete().eq('id', id); await loadAll(); }
 
-let entries = [];
-
-let events = [];
+let entries = [], events = [], cycles = [];
 
 function parseDate(str) {
   const [y,m,d] = str.split('-').map(Number);
@@ -527,6 +491,10 @@ function calcRate() {
   return days > 0 ? (s[0].kg - s[s.length-1].kg) / days * 30 : 0;
 }
 
+function getConservativeRate() {
+  return parseFloat(document.getElementById('conservativeRate')?.value) || 1.5;
+}
+
 function projectedKg(fromKg, fromDate, targetDate, ratePerMonth) {
   const days = (parseDate(targetDate) - parseDate(fromDate)) / 86400000;
   if (days <= 0) return fromKg;
@@ -535,7 +503,6 @@ function projectedKg(fromKg, fromDate, targetDate, ratePerMonth) {
   return Math.max(fromKg - (days / 30) * ratePerMonth, floor);
 }
 
-// Tabs
 let activeTab = "weight";
 function switchTab(tab, el) {
   activeTab = tab;
@@ -546,7 +513,6 @@ function switchTab(tab, el) {
   render();
 }
 
-// Add weight
 function addEntry() {
   const date = document.getElementById('inputDate').value;
   const kg = parseFloat(document.getElementById('inputWeight').value);
@@ -554,12 +520,8 @@ function addEntry() {
   document.getElementById('inputWeight').value = '';
   dbAddEntry(date, kg);
 }
+function removeEntry(date) { dbRemoveEntry(date); }
 
-function removeEntry(date) {
-  dbRemoveEntry(date);
-}
-
-// Add event
 function addEvent() {
   const date = document.getElementById('eventDate').value;
   const name = document.getElementById('eventName').value.trim();
@@ -567,10 +529,8 @@ function addEvent() {
   document.getElementById('eventName').value = '';
   dbAddEvent(date, name);
 }
-
 function removeEvent(id) { dbRemoveEvent(id); }
 
-// Stats
 function updateStats() {
   const s = sorted();
   if (!s.length) return;
@@ -585,13 +545,12 @@ function updateStats() {
   document.getElementById('statRate').textContent = (rate >= 0 ? '-' : '+') + Math.abs(rate).toFixed(2) + ' kg';
 }
 
-// Weight table
 function updateTable() {
   const s = sorted();
   const tbody = document.getElementById('dataBody');
   if (!s.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Noch keine Einträge</td></tr>'; return; }
   const sDesc = [...s].reverse();
-  tbody.innerHTML = sDesc.map((e, i) => {
+  tbody.innerHTML = sDesc.map((e) => {
     const idx = s.indexOf(e);
     const prev = idx > 0 ? s[idx-1] : null;
     const diff = prev ? (e.kg - prev.kg) : null;
@@ -601,17 +560,16 @@ function updateTable() {
       const sign = diff > 0 ? '+' : '';
       diffHtml = `<span class="${cls}">${sign}${diff.toFixed(2)}</span>`;
     }
-    const isStart = e.date === '2026-04-20';
+    const isFirst = e.date === s[0].date;
     return `<tr>
       <td>${formatDate(e.date)}</td>
       <td class="kg">${e.kg.toFixed(2)} kg</td>
       <td>${diffHtml}</td>
-      <td>${isStart ? '' : `<button class="btn-sm" onclick="removeEntry('${e.date}')">✕</button>`}</td>
+      <td>${isFirst ? '' : `<button class="btn-sm" onclick="removeEntry('${e.date}')">✕</button>`}</td>
     </tr>`;
   }).join('');
 }
 
-// Event table
 function updateEventTable() {
   const s = sorted();
   const last = s[s.length-1];
@@ -621,7 +579,6 @@ function updateEventTable() {
   if (!evs.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Noch keine Events eingetragen</td></tr>'; return; }
   const today = new Date().toISOString().slice(0,10);
   tbody.innerHTML = evs.map(ev => {
-    // Konservative Prognose: immer vom Startpunkt (20.04) mit fixer Rate 1,5kg/Mo → ändert sich nie
     const startEntry = sorted()[0];
     const daysSinceStart = (parseDate(ev.date) - parseDate(startEntry.date)) / 86400000;
     const g1val = parseFloat(document.getElementById("goal1Input").value) || 75;
@@ -629,11 +586,9 @@ function updateEventTable() {
     const floor = Math.min(g1val, g2val);
     const proKgRaw = startEntry.kg - (daysSinceStart / 30) * getConservativeRate();
     const proStr = Math.max(proKgRaw, floor).toFixed(1) + ' kg';
-    // Trend-Prognose: vom aktuellen Gewicht aus, darf sich ändern
     const trendKgRaw = rate > 0 ? projectedKg(last.kg, last.date, ev.date, rate) : null;
     const trendStr = trendKgRaw !== null ? trendKgRaw.toFixed(1) + ' kg' : '–';
     const eventPassed = ev.date <= today;
-    // Letzter Eintrag am oder vor dem Event-Datum
     const sortedAll = [...entries].sort((a,b) => a.date.localeCompare(b.date));
     const closestEntry = sortedAll.filter(e => e.date <= ev.date).pop();
     let cols = '';
@@ -648,12 +603,11 @@ function updateEventTable() {
       <td>${formatDate(ev.date)}</td>
       <td><span class="event-dot"></span>${ev.name}</td>
       ${cols}
-      <td><button class="btn-sm" onclick="removeEvent('${ev.date}', '${ev.name.replace(/'/g,"\'")}')">✕</button></td>
+      <td><button class="btn-sm" onclick="removeEvent('${ev.id}')">✕</button></td>
     </tr>`;
   }).join('');
 }
 
-// Goal badges
 function updateGoalBadges() {
   const s = sorted();
   if (s.length < 2) { document.getElementById('goalBadges').innerHTML = '<div class="empty-state">Mindestens 2 Einträge nötig für Prognose</div>'; return; }
@@ -687,12 +641,9 @@ function updateGoalBadges() {
         </div>
       </div>`;
   });
-
-
   document.getElementById('goalBadges').innerHTML = html;
 }
 
-// Chart
 function drawChart() {
   const canvas = document.getElementById('chart');
   const dpr = window.devicePixelRatio || 1;
@@ -711,7 +662,6 @@ function drawChart() {
   const last = s[s.length-1], first = s[0];
   const rate = calcRate();
   const minGoal = Math.min(g1, g2);
-
   const firstDate = parseDate(first.date);
   const lastDate = parseDate(last.date);
 
@@ -723,7 +673,7 @@ function drawChart() {
 
   const evDates = sortedEvents().map(e => parseDate(e.date));
   const trendEnd = rate > 0 ? endDate(last.kg, minGoal, rate) : lastDate;
-  const proEnd = endDate(last.kg, minGoal, 1.8);
+  const proEnd = endDate(last.kg, minGoal, getConservativeRate());
   const maxDate = new Date(Math.max(trendEnd, proEnd, lastDate, ...evDates));
   maxDate.setDate(maxDate.getDate() + 20);
 
@@ -742,7 +692,6 @@ function drawChart() {
 
   ctx.fillStyle = '#242018'; ctx.fillRect(0, 0, W, H);
 
-  // Grid
   for (let k = Math.ceil(minKg); k <= Math.floor(maxKg); k++) {
     if (k % 2 !== 0 && kgRange > 10) continue;
     ctx.strokeStyle = '#3a342c'; ctx.lineWidth = 1; ctx.setLineDash([]);
@@ -751,7 +700,6 @@ function drawChart() {
     ctx.fillText(k, ml-6, yOf(k)+4);
   }
 
-  // Goal lines
   [g1, g2].forEach((g, i) => {
     if (g < minKg || g > maxKg) return;
     ctx.save(); ctx.strokeStyle = i===0 ? '#5ab5a0' : '#4a8fa0';
@@ -760,12 +708,10 @@ function drawChart() {
     ctx.restore();
   });
 
-  // Axes
   ctx.strokeStyle = '#3a342c'; ctx.lineWidth = 1; ctx.setLineDash([]);
   ctx.beginPath(); ctx.moveTo(ml,mt); ctx.lineTo(ml,mt+cH); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ml,mt+cH); ctx.lineTo(ml+cW,mt+cH); ctx.stroke();
 
-  // X month labels
   ctx.fillStyle = '#8a7a6a'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
   const mnames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
   let md = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
@@ -782,7 +728,6 @@ function drawChart() {
     ctx.beginPath(); pts.forEach((p,i) => i===0 ? ctx.moveTo(p[0],p[1]) : ctx.lineTo(p[0],p[1]));
     ctx.stroke(); ctx.restore();
   }
-
   function fillUnder(pts, color) {
     if (pts.length < 2) return;
     const base = yOf(minKg);
@@ -791,7 +736,6 @@ function drawChart() {
     pts.forEach(p => ctx.lineTo(p[0],p[1]));
     ctx.lineTo(pts[pts.length-1][0], base); ctx.closePath(); ctx.fill(); ctx.restore();
   }
-
   function buildPrognose(fromKg, fromD, target, ratePerMonth) {
     const pts = [[xOf(fromD), yOf(fromKg)]];
     if (ratePerMonth <= 0 || fromKg <= target) return pts;
@@ -802,14 +746,13 @@ function drawChart() {
   }
 
   const actualPts = s.map(e => [xOfStr(e.date), yOf(e.kg)]);
-  const prognosePts = buildPrognose(last.kg, lastDate, minGoal, 1.8);
+  const prognosePts = buildPrognose(last.kg, lastDate, minGoal, getConservativeRate());
   const trendPts = rate > 0 ? buildPrognose(last.kg, lastDate, minGoal, rate) : [];
 
   fillUnder(prognosePts, '#5ab5a0');
   fillUnder(trendPts, '#e05a8a');
-  // actual fill
-  const baseY = yOf(minKg);
   if (actualPts.length >= 2) {
+    const baseY = yOf(minKg);
     ctx.save(); ctx.globalAlpha = 0.18; ctx.fillStyle = '#e8835a';
     ctx.beginPath(); ctx.moveTo(actualPts[0][0], baseY);
     actualPts.forEach(p => ctx.lineTo(p[0],p[1]));
@@ -820,7 +763,6 @@ function drawChart() {
   dashedLine(prognosePts, '#5ab5a0');
   dashedLine(trendPts, '#e05a8a');
 
-  // Actual line
   if (actualPts.length >= 2) {
     ctx.save(); ctx.strokeStyle = '#e8835a'; ctx.lineWidth = 2.5;
     ctx.setLineDash([]); ctx.lineJoin='round'; ctx.lineCap='round';
@@ -828,7 +770,6 @@ function drawChart() {
     ctx.stroke(); ctx.restore();
   }
 
-  // Actual dots (small)
   s.forEach((e,i) => {
     const [x,y] = actualPts[i];
     ctx.save();
@@ -841,7 +782,6 @@ function drawChart() {
     }
   });
 
-  // Prognose end dots
   function endDot(pts, color, label) {
     if (pts.length < 2) return;
     const [x,y] = pts[pts.length-1];
@@ -853,21 +793,15 @@ function drawChart() {
   endDot(trendPts, '#e05a8a', minGoal+' kg');
   endDot(prognosePts, '#5ab5a0', minGoal+' kg');
 
-  // ── Events ────────────────────────────────────────────────────────────────
   if (activeTab === 'event') sortedEvents().forEach((ev, idx) => {
     const evD = parseDate(ev.date);
     const x = xOf(evD);
     if (x < ml || x > ml+cW) return;
-
-    // Vertical line
     ctx.save(); ctx.strokeStyle = '#f0c060'; ctx.lineWidth = 1.5;
     ctx.setLineDash([4,3]); ctx.globalAlpha = 0.7;
     ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, mt+cH); ctx.stroke(); ctx.restore();
-
-    // Dot on trend line
     const trendKg = rate > 0 ? projectedKg(last.kg, last.date, ev.date, rate) : null;
-    const proKg = projectedKg(last.kg, last.date, ev.date, 1.8);
-
+    const proKg = projectedKg(last.kg, last.date, ev.date, getConservativeRate());
     if (trendKg !== null && trendKg >= minKg && trendKg <= maxKg) {
       ctx.save(); ctx.fillStyle='#242018'; ctx.strokeStyle='#e05a8a'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(x, yOf(trendKg), 4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
@@ -876,25 +810,18 @@ function drawChart() {
       ctx.save(); ctx.fillStyle='#242018'; ctx.strokeStyle='#5ab5a0'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(x, yOf(proKg), 4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
     }
-
-    // Label (alternating above/below to avoid overlap)
     const labelY = idx % 2 === 0 ? mt + 12 : mt + 24;
     ctx.save(); ctx.fillStyle = '#f0c060'; ctx.font = 'bold 9px DM Sans,sans-serif';
     ctx.textAlign = 'center'; ctx.globalAlpha = 0.9;
-    // Truncate long names
     const label = ev.name.length > 14 ? ev.name.slice(0,13)+'…' : ev.name;
     ctx.fillText(label, x, labelY); ctx.restore();
   });
 
-  // Heute marker
   ctx.save(); ctx.strokeStyle='#e8835a'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.globalAlpha=0.3;
   ctx.beginPath(); ctx.moveTo(xOf(lastDate),mt); ctx.lineTo(xOf(lastDate),mt+cH); ctx.stroke(); ctx.restore();
   ctx.fillStyle='#e8835a'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.globalAlpha=0.7;
   ctx.fillText('Heute', xOf(lastDate), H-mb+26); ctx.globalAlpha=1;
 }
-
-// ── Cycle Data ───────────────────────────────────────────────────────────────
-let cycles = [];
 
 function addCycle() {
   const start = document.getElementById('cycleStartDate').value;
@@ -904,11 +831,9 @@ function addCycle() {
   document.getElementById('cycleName').value = '';
   dbAddCycle(start, name);
 }
-
 function removeCycle(id) { dbRemoveCycle(id); }
 
 function cycleWeekAvg(cycleStart, weekNum) {
-  // weekNum: 1-4, each 7 days
   const start = parseDate(cycleStart);
   const dayStart = (weekNum - 1) * 7;
   const dayEnd = weekNum * 7 - 1;
@@ -917,26 +842,15 @@ function cycleWeekAvg(cycleStart, weekNum) {
     return days >= dayStart && days <= dayEnd;
   });
   if (weekEntries.length === 0) return null;
-  const avg = weekEntries.reduce((s, e) => s + e.kg, 0) / weekEntries.length;
-  return avg;
+  return weekEntries.reduce((s, e) => s + e.kg, 0) / weekEntries.length;
 }
 
 function updateCycleTable() {
   const el = document.getElementById('cycleTable');
   if (!el) return;
-  if (cycles.length === 0) {
-    el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>';
-    return;
-  }
-
+  if (cycles.length === 0) { el.innerHTML = '<div class="empty-state">Noch keine Zyklen eingetragen</div>'; return; }
   const displayCycles = cycles.slice(-3);
   const weekLabels = ['Woche 1 (Periode)', 'Woche 2', 'Woche 3', 'Woche 4'];
-
-  // Determine which cycles need a vs. column
-  // A cycle gets a vs. column if ANY cycle in displayCycles has a predecessor
-  // Pattern: Zyklus | vs. | Zyklus | vs. | Zyklus | vs.
-  // Every cycle gets a vs. column (showing – if no predecessor)
-
   let html = '<table class="data-table" style="font-size:0.8rem;table-layout:fixed"><thead><tr>';
   html += '<th style="width:30%">Zykluswoche</th>';
   displayCycles.forEach(c => {
@@ -946,7 +860,6 @@ function updateCycleTable() {
     html += `<th style="color:var(--prognose);font-size:0.7rem">${prev ? 'vs. ' + prev.name : ''}</th>`;
   });
   html += '</tr></thead><tbody>';
-
   for (let w = 1; w <= 4; w++) {
     html += `<tr><td style="color:var(--muted)">${weekLabels[w-1]}</td>`;
     displayCycles.forEach(c => {
@@ -961,16 +874,11 @@ function updateCycleTable() {
           const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
           const sign = diff > 0 ? '+' : '';
           html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
-        } else {
-          html += `<td style="color:var(--muted)">–</td>`;
-        }
-      } else {
-        html += `<td></td>`;
-      }
+        } else { html += `<td style="color:var(--muted)">–</td>`; }
+      } else { html += `<td></td>`; }
     });
     html += '</tr>';
   }
-
   html += `<tr style="border-top:1px solid var(--border)"><td style="color:var(--muted);font-style:italic">Ø gesamt</td>`;
   displayCycles.forEach(c => {
     const fullIdx = cycles.indexOf(c);
@@ -986,27 +894,15 @@ function updateCycleTable() {
         const cls = diff < 0 ? 'diff-neg' : 'diff-pos';
         const sign = diff > 0 ? '+' : '';
         html += `<td><span class="${cls}">${sign}${diff.toFixed(2)}</span></td>`;
-      } else {
-        html += `<td style="color:var(--muted)">–</td>`;
-      }
-    } else {
-      html += `<td></td>`;
-    }
+      } else { html += `<td style="color:var(--muted)">–</td>`; }
+    } else { html += `<td></td>`; }
   });
   html += '</tr></tbody></table>';
   el.innerHTML = html;
 }
 
-
-
 let renderTimer = null;
-function getConservativeRate() {
-  return parseFloat(document.getElementById('conservativeRate')?.value) || 1.5;
-}
-function renderDebounced() {
-  clearTimeout(renderTimer);
-  renderTimer = setTimeout(render, 100);
-}
+function renderDebounced() { clearTimeout(renderTimer); renderTimer = setTimeout(render, 100); }
 
 function render() {
   updateStats(); updateTable(); updateEventTable(); updateGoalBadges(); updateCycleTable(); drawChart();
@@ -1016,7 +912,6 @@ document.getElementById('inputDate').value = new Date().toISOString().slice(0,10
 document.getElementById('eventDate').value = new Date().toISOString().slice(0,10);
 window.addEventListener('resize', render);
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
 (function boot() {
   const profile = retrieve('wt_profile');
   const url = retrieve('wt_url');
@@ -1024,20 +919,19 @@ window.addEventListener('resize', render);
 
   if (profile) {
     userProfile = JSON.parse(profile);
-    // Apply profile after DOM ready
     setTimeout(applyProfile, 0);
   }
 
+  // Load saved goals — always, before anything else renders
+  loadGoals();
+
   if (url && key) {
-    // All set – go straight to app
     sb = supabase.createClient(url, key);
     document.getElementById('mainApp').style.display = 'block';
     loadAllThenSeedIfEmpty();
   } else if (profile) {
-    // Profile done, but no DB yet
     document.getElementById('setupScreen').style.display = 'flex';
   } else {
-    // First time – show onboarding
     document.getElementById('onboardingScreen').style.display = 'flex';
   }
 })();
